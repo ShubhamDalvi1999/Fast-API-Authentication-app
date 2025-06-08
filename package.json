@@ -1,9 +1,0 @@
-{
-  "name": "fast-api-authentication-app",
-  "version": "1.0.0",
-  "description": "FastAPI Authentication app with React frontend",
-  "scripts": {
-    "build": "cd frontend && npm install && npm run build"
-  },
-  "dependencies": {}
-} 
