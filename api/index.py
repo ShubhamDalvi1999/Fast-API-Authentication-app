@@ -1,5 +1,4 @@
 from http.server import BaseHTTPRequestHandler
-import json
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -8,9 +7,10 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         
         response = {
-            "message": "API is working!",
-            "path": self.path,
-            "note": "This is a test handler to verify Vercel serverless functions"
+            "status": "ok",
+            "message": "Node.js API endpoint is working!",
+            "path": self.path
         }
         
-        self.wfile.write(json.dumps(response).encode()) 
+        self.wfile.write(str(response).encode())
+        return 

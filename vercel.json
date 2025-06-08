@@ -31,6 +31,14 @@
       "dest": "backend/app/api/main.py"
     },
     {
+      "src": "/api/debug",
+      "dest": "backend/app/api/main.py"
+    },
+    {
+      "src": "/api/health-check",
+      "dest": "backend/app/api/main.py"
+    },
+    {
       "src": "/api(/?.*)",
       "dest": "backend/app/api/main.py"
     },

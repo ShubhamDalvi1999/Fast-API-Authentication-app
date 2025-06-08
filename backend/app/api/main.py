@@ -21,6 +21,7 @@ except ImportError:
     from app.core.auth import get_current_user
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import traceback
 
 
 app = FastAPI()
@@ -34,7 +35,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
+# Register routers
+try:
+    app.include_router(auth.router)
+except Exception as e:
+    print(f"Error including router: {str(e)}")
 
 # Create database tables if not in production
 if os.environ.get("VERCEL_ENV") != "production":
@@ -70,6 +75,45 @@ async def basic_health():
     return {"status": "ok"}
 
 
+# Detailed environment check
+@app.get("/api/debug")
+async def debug_info():
+    try:
+        # Get environment info
+        env_info = {
+            "VERCEL_ENV": os.environ.get("VERCEL_ENV"),
+            "PYTHONPATH": os.environ.get("PYTHONPATH"),
+            "DATABASE_URL": os.environ.get("DATABASE_URL", "Not set").replace(
+                os.environ.get("PGPASSWORD", ""), "[REDACTED]"
+            ) if os.environ.get("DATABASE_URL") else "Not set",
+            "sys.path": sys.path,
+            "current_directory": os.getcwd(),
+            "directory_contents": os.listdir(".")
+        }
+        
+        # Test database connection without exposing credentials
+        db_status = "Not tested"
+        try:
+            db = SessionLocal()
+            result = db.execute("SELECT 1").scalar()
+            db.close()
+            db_status = f"Connected successfully (test query result: {result})"
+        except Exception as e:
+            db_status = f"Connection failed: {str(e)}"
+            
+        return {
+            "status": "ok",
+            "environment": env_info,
+            "database": db_status
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 # Database connection test
 @app.get("/api/db-test")
 async def test_db_connection():
@@ -81,7 +125,7 @@ async def test_db_connection():
         db.close()
         return {"status": "ok", "connected": True, "test_query": result}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
 
 
 ## running the app using uvicorn : uvicorn main:app --reload
