@@ -90,7 +90,7 @@ export const getCurrentUser = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      throw 'No token found. Please login again.';
+      throw new Error('No token found. Please login again.');
     }
     
     const response = await api.get('/users/me', {
