@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Auto-detect API URL based on environment
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/auth' // In production, use relative URL (handled by Vercel rewrites)
-  : 'http://localhost:8000/auth'; // In development, use full URL
+  ? '/api/auth' // In production, use relative URL (handled by Vercel rewrites)
+  : 'http://localhost:8000/api/auth'; // In development, use full URL
 
 // Create an axios instance with common settings
 const api = axios.create({

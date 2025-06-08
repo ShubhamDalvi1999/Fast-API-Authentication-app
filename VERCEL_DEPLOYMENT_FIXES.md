@@ -23,6 +23,9 @@
 
 ### Modified Files
 - `vercel.json` - Simplified configuration with proper routing
+- `backend/app/core/auth.py` - Updated router prefix from `/auth` to `/api/auth`
+- `frontend/src/services/authService.js` - Updated production API URL to `/api/auth`
+- `backend/app/api/main.py` - Moved remaining endpoints under `/api` prefix
 
 ## Configuration Details
 
@@ -55,8 +58,13 @@
 
 After deployment, test these endpoints:
 - `/api/health-check` - Basic health check
+- `/api/health` - Simple health check
 - `/api/debug` - Environment debug information
 - `/api/db-test` - Database connectivity test
+- `/api/auth/` - User registration (POST)
+- `/api/auth/token` - User login (POST)
+- `/api/auth/users/me` - Get current user (GET with Bearer token)
+- `/api/user` - Get user info (GET with Bearer token)
 
 ## Notes
 
