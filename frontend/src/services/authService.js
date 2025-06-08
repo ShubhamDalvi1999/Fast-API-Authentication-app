@@ -5,10 +5,19 @@ const API_URL = process.env.NODE_ENV === 'production'
   ? '/auth' // In production, use relative URL (handled by Vercel rewrites)
   : 'http://localhost:8000/auth'; // In development, use full URL
 
+// Create an axios instance with common settings
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true
+});
+
 // Register a new user
 export const register = async (username, password) => {
   try {
-    const response = await axios.post(`${API_URL}/`, {
+    const response = await api.post('/', {
       username,
       password
     });
@@ -25,7 +34,7 @@ export const login = async (username, password) => {
     formData.append('username', username);
     formData.append('password', password);
     
-    const response = await axios.post(`${API_URL}/token`, formData);
+    const response = await api.post('/token', formData);
     
     if (response.data.access_token) {
       localStorage.setItem('token', response.data.access_token);
@@ -44,7 +53,7 @@ export const getCurrentUser = async () => {
       throw new Error('No token found');
     }
     
-    const response = await axios.get(`${API_URL}/users/me`, {
+    const response = await api.get('/users/me', {
       headers: {
         Authorization: `Bearer ${token}`
       }
