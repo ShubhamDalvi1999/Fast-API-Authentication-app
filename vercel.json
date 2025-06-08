@@ -8,14 +8,18 @@
       "use": "@vercel/python"
     },
     {
-      "src": "api/*.js",
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/js-test",
+      "dest": "/api/index"
+    },
+    {
       "src": "/api/check",
-      "dest": "/api/check.js"
+      "dest": "/api/check"
     },
     {
       "src": "/api-test",

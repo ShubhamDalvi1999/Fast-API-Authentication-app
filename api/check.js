@@ -2,7 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = (req, res) => {
+// Vercel serverless function format
+export default function handler(req, res) {
   // Report on the file structure to help diagnose issues
   const results = {
     status: 'ok',
@@ -82,4 +83,4 @@ module.exports = (req, res) => {
   };
 
   res.status(200).json(results);
-}; 
+} 
