@@ -35,6 +35,10 @@
       "dest": "backend/app/api/main.py"
     },
     {
+      "src": "/api/init-db",
+      "dest": "backend/app/api/main.py"
+    },
+    {
       "src": "/api/health-check",
       "dest": "backend/app/api/main.py"
     },

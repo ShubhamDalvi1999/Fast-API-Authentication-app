@@ -75,6 +75,30 @@ async def basic_health():
     return {"status": "ok"}
 
 
+# Initialize database tables in production (protected by special key)
+@app.post("/api/init-db")
+async def init_database(init_key: str):
+    # Simple protection to prevent unauthorized table creation
+    expected_key = os.environ.get("INIT_DB_KEY", "development-init-key")
+    
+    if init_key != expected_key:
+        return {"status": "error", "message": "Invalid initialization key"}
+    
+    try:
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
+        return {
+            "status": "success",
+            "message": "Database tables initialized successfully"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 # Detailed environment check
 @app.get("/api/debug")
 async def debug_info():
