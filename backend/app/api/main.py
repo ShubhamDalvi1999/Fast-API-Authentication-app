@@ -2,7 +2,7 @@ from fastapi import FastAPI, status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, relationship
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, text
 from typing import Annotated, Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
@@ -146,7 +146,8 @@ async def debug_info():
         db_status = "Not tested"
         try:
             db = SessionLocal()
-            result = db.execute("SELECT 1").scalar()
+            # Use text() for raw SQL queries with SQLAlchemy 2.0+
+            result = db.execute(text("SELECT 1")).scalar()
             db.close()
             db_status = f"Connected successfully (test query result: {result})"
         except Exception as e:
@@ -171,8 +172,8 @@ async def test_db_connection():
     try:
         # Test creating a session
         db = SessionLocal()
-        # Run a simple query
-        result = db.execute("SELECT 1").scalar()
+        # Run a simple query with text() for SQLAlchemy 2.0+ compatibility
+        result = db.execute(text("SELECT 1")).scalar()
         db.close()
         return {"status": "ok", "connected": True, "test_query": result}
     except Exception as e:
