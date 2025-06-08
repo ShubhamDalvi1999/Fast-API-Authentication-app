@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
+      "src": "backend/vercel_handler.py",
       "use": "@vercel/python"
     },
     {
@@ -15,22 +15,30 @@
   ],
   "routes": [
     {
-      "src": "/auth/(.*)",
-      "dest": "/api/index.py"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/backend/vercel_handler.py"
     },
     {
-      "handle": "filesystem"
+      "src": "/auth/(.*)",
+      "dest": "/backend/vercel_handler.py"
+    },
+    {
+      "src": "/docs",
+      "dest": "/backend/vercel_handler.py"
+    },
+    {
+      "src": "/openapi.json",
+      "dest": "/backend/vercel_handler.py"
     },
     {
       "src": "/static/(.*)",
       "dest": "/frontend/build/static/$1"
     },
     {
-      "src": "/(.+\\.[a-zA-Z0-9]+)$",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*\\.[a-zA-Z0-9]{2,}$)",
       "dest": "/frontend/build/$1"
     },
     {

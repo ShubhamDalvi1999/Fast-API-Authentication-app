@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/auth';
+// Auto-detect API URL based on environment
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? '/auth' // In production, use relative URL (handled by Vercel rewrites)
+  : 'http://localhost:8000/auth'; // In development, use full URL
 
 // Register a new user
 export const register = async (username, password) => {

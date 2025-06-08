@@ -12,6 +12,7 @@ from app.core import auth
 from app.core.auth import get_current_user
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 
 app = FastAPI()
@@ -19,7 +20,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend URL
+    allow_origins=["http://localhost:3000", "https://*.vercel.app", "*"],  # Allow Vercel domains and local development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +47,11 @@ async def user(user: user_dependency,  db : db_dependency):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     return {"User": user}
 
+
+# For Vercel serverless function
+@app.get("/api/health-check")
+async def health_check():
+    return {"status": "ok", "message": "FastAPI backend is running!"}
 
 
 ## running the app using uvicorn : uvicorn main:app --reload
