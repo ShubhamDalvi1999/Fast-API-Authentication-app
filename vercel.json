@@ -6,6 +6,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/index.py",
+      "use": "@vercel/node"
+    },
+    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
@@ -14,6 +18,18 @@
     }
   ],
   "routes": [
+    {
+      "src": "/api-test",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/health",
+      "dest": "backend/app/api/main.py"
+    },
+    {
+      "src": "/api/db-test",
+      "dest": "backend/app/api/main.py"
+    },
     {
       "src": "/api(/?.*)",
       "dest": "backend/app/api/main.py"
@@ -43,6 +59,8 @@
     }
   ],
   "env": {
-    "PYTHONPATH": "."
-  }
+    "PYTHONPATH": ".",
+    "VERCEL_ENV": "production"
+  },
+  "outputDirectory": "frontend/build"
 } 

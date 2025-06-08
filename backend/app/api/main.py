@@ -6,13 +6,21 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from typing import Annotated, Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from app.db.database import Base, engine, SessionLocal
-from app.models.models import User
-from app.core import auth
-from app.core.auth import get_current_user
+import sys, os
+# Fix imports for Vercel deployment
+try:
+    from backend.app.db.database import Base, engine, SessionLocal
+    from backend.app.models.models import User
+    from backend.app.core import auth
+    from backend.app.core.auth import get_current_user
+except ImportError:
+    # Fallback to local imports
+    from app.db.database import Base, engine, SessionLocal
+    from app.models.models import User
+    from app.core import auth
+    from app.core.auth import get_current_user
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
 
 app = FastAPI()
@@ -28,7 +36,9 @@ app.add_middleware(
 
 app.include_router(auth.router)
 
-Base.metadata.create_all(bind=engine)
+# Create database tables if not in production
+if os.environ.get("VERCEL_ENV") != "production":
+    Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -52,6 +62,26 @@ async def user(user: user_dependency,  db : db_dependency):
 @app.get("/api/health-check")
 async def health_check():
     return {"status": "ok", "message": "FastAPI backend is running!"}
+
+
+# Simple health check for troubleshooting
+@app.get("/health")
+async def basic_health():
+    return {"status": "ok"}
+
+
+# Database connection test
+@app.get("/api/db-test")
+async def test_db_connection():
+    try:
+        # Test creating a session
+        db = SessionLocal()
+        # Run a simple query
+        result = db.execute("SELECT 1").scalar()
+        db.close()
+        return {"status": "ok", "connected": True, "test_query": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 ## running the app using uvicorn : uvicorn main:app --reload
