@@ -33,7 +33,22 @@ const Register = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.detail || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      // Handle different error formats properly
+      let errorMessage = 'Registration failed. Please try again.';
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err.detail && typeof err.detail === 'string') {
+        errorMessage = err.detail;
+      } else if (err.message && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err.msg && typeof err.msg === 'string') {
+        errorMessage = err.msg;
+      } else if (typeof err === 'object') {
+        // Convert object to string for debugging
+        errorMessage = 'Registration failed: ' + JSON.stringify(err);
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

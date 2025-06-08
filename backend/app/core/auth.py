@@ -1,17 +1,41 @@
-from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from jose import jwt, JWTError
-from app.models.models import User
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.db.database import SessionLocal
+from pydantic import BaseModel
 from starlette import status
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import sys
 
+# Add the parent directory to sys.path for local development
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(os.path.dirname(current_dir))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+    print(f"Added {parent_dir} to sys.path from auth.py")
+
+# Fix imports for different environments
+try:
+    # Try relative imports first
+    from ..db.database import SessionLocal
+    from ..models.models import User
+    print("Auth: Using relative imports")
+except ImportError:
+    try:
+        # Try absolute imports with backend prefix
+        from backend.app.db.database import SessionLocal
+        from backend.app.models.models import User
+        print("Auth: Using backend.app.* imports")
+    except ImportError:
+        # Fallback to local imports
+        from app.db.database import SessionLocal
+        from app.models.models import User
+        print("Auth: Using app.* imports")
+
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 
 router = APIRouter(
     prefix="/auth",

@@ -7,22 +7,44 @@ from typing import Annotated, Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import sys, os
-# Fix imports for Vercel deployment
+
+# Add the parent directory to sys.path for local development
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(os.path.dirname(current_dir))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+    print(f"Added {parent_dir} to sys.path")
+
+# Fix imports for different environments
 try:
-    from backend.app.db.database import Base, engine, SessionLocal
-    from backend.app.models.models import User
-    from backend.app.core import auth
-    from backend.app.core.auth import get_current_user
+    # Try relative imports first (when running from backend directory)
+    from ..db.database import Base, engine, SessionLocal
+    from ..models.models import User
+    from ..core import auth
+    from ..core.auth import get_current_user
+    print("Using relative imports")
 except ImportError:
-    # Fallback to local imports
-    from app.db.database import Base, engine, SessionLocal
-    from app.models.models import User
-    from app.core import auth
-    from app.core.auth import get_current_user
+    try:
+        # Try absolute imports with backend prefix (for Vercel)
+        from backend.app.db.database import Base, engine, SessionLocal
+        from backend.app.models.models import User
+        from backend.app.core import auth
+        from backend.app.core.auth import get_current_user
+        print("Using backend.app.* imports")
+    except ImportError:
+        # Fallback to local imports (assuming we're in the app directory structure)
+        from app.db.database import Base, engine, SessionLocal
+        from app.models.models import User
+        from app.core import auth
+        from app.core.auth import get_current_user
+        print("Using app.* imports")
+
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
 
+# Global flag to avoid multiple table creation attempts
+tables_created = False
 
 app = FastAPI()
 
@@ -41,9 +63,14 @@ try:
 except Exception as e:
     print(f"Error including router: {str(e)}")
 
-# Create database tables if not in production
-if os.environ.get("VERCEL_ENV") != "production":
-    Base.metadata.create_all(bind=engine)
+# Create database tables if not in production, and only once
+if os.environ.get("VERCEL_ENV") != "production" and not tables_created:
+    try:
+        Base.metadata.create_all(bind=engine)
+        tables_created = True
+        print("Database tables created successfully")
+    except Exception as e:
+        print(f"Error creating tables: {str(e)}")
 
 def get_db():
     db = SessionLocal()

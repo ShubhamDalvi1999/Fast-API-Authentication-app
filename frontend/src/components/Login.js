@@ -19,7 +19,22 @@ const Login = () => {
       await login(username, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.detail || 'Login failed. Please check your credentials.');
+      console.error('Login error:', err);
+      // Handle different error formats properly
+      let errorMessage = 'Login failed. Please check your credentials.';
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err.detail && typeof err.detail === 'string') {
+        errorMessage = err.detail;
+      } else if (err.message && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err.msg && typeof err.msg === 'string') {
+        errorMessage = err.msg;
+      } else if (typeof err === 'object') {
+        // Convert object to string for debugging
+        errorMessage = 'Login failed: ' + JSON.stringify(err);
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
