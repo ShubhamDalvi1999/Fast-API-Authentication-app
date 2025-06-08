@@ -1,74 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/build",
   "builds": [
     {
-      "src": "backend/app/api/main.py",
+      "src": "api/main.py",
       "use": "@vercel/python"
     },
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
     }
   ],
   "routes": [
-    {
-      "src": "/api/js-test",
-      "dest": "/api/index"
-    },
-    {
-      "src": "/api/check",
-      "dest": "/api/check"
-    },
-    {
-      "src": "/api-test",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/health",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/api/db-test",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/api/debug",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/api/init-db",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/api/health-check",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/api(/?.*)",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/auth(/?.*)",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/docs",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "src": "/openapi.json",
-      "dest": "/backend/app/api/main.py"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+    { "src": "/api/(.*)", "dest": "/api/main.py" },
+    { "src": "/(.*)",     "dest": "/frontend/$1" }
   ],
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/build",
   "env": {
     "PYTHONPATH": ".",
     "VERCEL_ENV": "production"
