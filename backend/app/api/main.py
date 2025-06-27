@@ -63,14 +63,19 @@ try:
 except Exception as e:
     print(f"Error including router: {str(e)}")
 
-# Create database tables if not in production, and only once
-if os.environ.get("VERCEL_ENV") != "production" and not tables_created:
+# Create database tables on startup, but only once
+if not tables_created:
     try:
         Base.metadata.create_all(bind=engine)
         tables_created = True
         print("Database tables created successfully")
+        
+        # Log which environment we're in
+        env = os.environ.get("VERCEL_ENV", "development")
+        print(f"Tables created in {env} environment")
     except Exception as e:
         print(f"Error creating tables: {str(e)}")
+        # In production, this might be expected if tables already exist
 
 def get_db():
     db = SessionLocal()
@@ -112,11 +117,24 @@ async def init_database(init_key: str):
         return {"status": "error", "message": "Invalid initialization key"}
     
     try:
+        # Check if tables already exist
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        
         # Create all tables
         Base.metadata.create_all(bind=engine)
+        
+        # Check what tables were created
+        new_tables = inspector.get_table_names()
+        created_tables = [t for t in new_tables if t not in existing_tables]
+        
         return {
             "status": "success",
-            "message": "Database tables initialized successfully"
+            "message": "Database initialization completed",
+            "existing_tables": existing_tables,
+            "created_tables": created_tables,
+            "all_tables": new_tables
         }
     except Exception as e:
         return {
@@ -178,6 +196,58 @@ async def test_db_connection():
         return {"status": "ok", "connected": True, "test_query": result}
     except Exception as e:
         return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+
+
+# Check database schema status
+@app.get("/api/db-status")
+async def check_db_status():
+    try:
+        from sqlalchemy import inspect, text
+        
+        # Test connection
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        
+        # Check tables
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        
+        # Check if users table exists and get column info
+        users_table_info = None
+        if 'users' in tables:
+            users_columns = inspector.get_columns('users')
+            users_table_info = {
+                "exists": True,
+                "columns": [col['name'] for col in users_columns]
+            }
+        else:
+            users_table_info = {"exists": False}
+        
+        # Check if there are any users in the database
+        user_count = 0
+        if 'users' in tables:
+            try:
+                result = db.execute(text("SELECT COUNT(*) FROM users")).scalar()
+                user_count = result
+            except:
+                user_count = "Unable to count"
+        
+        db.close()
+        
+        return {
+            "status": "ok",
+            "database_connected": True,
+            "all_tables": tables,
+            "users_table": users_table_info,
+            "user_count": user_count,
+            "environment": os.environ.get("VERCEL_ENV", "development")
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
 
 
 ## running the app using uvicorn : uvicorn main:app --reload
