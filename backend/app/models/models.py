@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy.sql import func
 import sys
 import os
 
@@ -30,6 +31,20 @@ class User(Base):
     __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True)
-    hashed_password = Column(String(100))
-    is_active = Column(Boolean, default=True) 
+    username = Column(String(100), unique=True, nullable=True)  # Made nullable for Google OAuth users
+    email = Column(String(255), unique=True, nullable=True)  # Added for Google OAuth
+    hashed_password = Column(String(100), nullable=True)  # Made nullable for Google OAuth users
+    is_active = Column(Boolean, default=True)
+    
+    # Google OAuth fields
+    google_id = Column(String(255), unique=True, nullable=True)
+    google_email = Column(String(255), unique=True, nullable=True)
+    google_name = Column(String(255), nullable=True)
+    google_picture = Column(String(500), nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Auth method tracking
+    auth_method = Column(String(50), default="local")  # "local" or "google" 

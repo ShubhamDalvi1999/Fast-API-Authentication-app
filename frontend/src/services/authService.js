@@ -11,8 +11,32 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true
+  withCredentials: false  // Changed to false since we don't need credentials for Google OAuth
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('Making request to:', config.url);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log('Response received:', response.status, response.data);
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.response?.status, error.response?.data);
+    return Promise.reject(error);
+  }
+);
 
 // Helper function to safely extract error message
 const extractErrorMessage = (error) => {
@@ -72,7 +96,7 @@ export const login = async (username, password) => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      withCredentials: true
+      withCredentials: false  // Changed to false to match the CORS configuration
     });
     
     if (response.data.access_token) {
@@ -108,4 +132,81 @@ export const getCurrentUser = async () => {
 // Logout user
 export const logout = () => {
   localStorage.removeItem('token');
+};
+
+// Google OAuth functions
+export const getGoogleAuthUrl = async () => {
+  try {
+    const response = await api.get('/google/authorize');
+    return response.data;
+  } catch (error) {
+    console.error('Get Google auth URL error:', error);
+    const errorMessage = extractErrorMessage(error);
+    
+    // Check if Google OAuth is disabled
+    if (errorMessage.includes('not configured') || errorMessage.includes('disabled')) {
+      throw new Error('Google OAuth is not configured on the server. Please contact the administrator.');
+    }
+    
+    throw errorMessage;
+  }
+};
+
+export const handleGoogleCallback = async (code, state, nonce = null) => {
+  try {
+    const requestData = {
+      code,
+      state
+    };
+    
+    // Only include nonce if it's not null
+    if (nonce) {
+      requestData.nonce = nonce;
+    }
+    
+    console.log('Sending Google callback data:', requestData);
+    
+    const response = await api.post('/google/callback', requestData);
+    
+    if (response.data.access_token) {
+      localStorage.setItem('token', response.data.access_token);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Google callback error:', error);
+    const errorMessage = extractErrorMessage(error);
+    
+    // Check if Google OAuth is disabled
+    if (errorMessage.includes('not configured') || errorMessage.includes('disabled')) {
+      throw new Error('Google OAuth is not configured on the server. Please contact the administrator.');
+    }
+    
+    throw errorMessage;
+  }
+};
+
+// Handle Google OAuth redirect with state management
+export const initiateGoogleLogin = async () => {
+  try {
+    const authData = await getGoogleAuthUrl();
+    
+    // Store state in sessionStorage for validation during callback
+    sessionStorage.setItem('google_oauth_state', authData.state);
+    
+    // Redirect to Google OAuth
+    window.location.href = authData.authorization_url;
+  } catch (error) {
+    console.error('Google login initiation error:', error);
+    throw error;
+  }
+};
+
+// Check if Google OAuth is available
+export const isGoogleOAuthAvailable = async () => {
+  try {
+    await getGoogleAuthUrl();
+    return true;
+  } catch (error) {
+    return false;
+  }
 }; 

@@ -6,4 +6,6 @@ uvicorn
 sqlalchemy
 pydantic
 pydantic-settings
-pydantic-core 
+pydantic-core
+httpx
+python-dotenv 
